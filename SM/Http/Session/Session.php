@@ -1,6 +1,8 @@
 <?php
 namespace SM\Http\Session;
 
+use SM\Util\Str;
+
 class Session
 {
 	private $_saveHandler          = null;
@@ -11,13 +13,15 @@ class Session
 	public function start($saveHandler = null, $storage = null)
 	{
 		if ($saveHandler !== null) {
-			$saveHandler = ucfirst(strtolower($saveHandler));
+			$saveHandler = Str::nameize($saveHandler);
 			$this->setSaveHandler($saveHandler, $storage);
 		}
 		
 		if (!$this->isActived()) {
 			session_cache_limiter('');
-			session_start();
+			session_start([
+				'cookie_httponly' => true
+			]);
 		}
 	}
 	

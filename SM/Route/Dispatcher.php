@@ -5,6 +5,7 @@ class Dispatcher
 {
 	private $_suffix;
 	private $_classPath;
+	private $_xssClean = true;
 	
 	public function __construct()
 	{
@@ -20,13 +21,18 @@ class Dispatcher
 	{
 		$this->_classPath = rtrim($path, '\\') . '\\';
 	}
+
+	public function setXssClean($xssClean)
+	{
+		$this->_xssClean = (bool) $xssClean;
+	}
 	
 	public function dispatch(Route $route)
 	{
 		$class  = $route->getMapClass();
 		$method = $route->getMapMethod();
 		$params = $route->getMapArguments();
-		
+
 		if (empty($class)) {
 			throw new RouteException('Class Name not specified.');
 		}
@@ -48,12 +54,14 @@ class Dispatcher
 			throw new RouteException('Class not found ' . $class);
 		}
 		
-		if (false === method_exists($class, $method)) {
+		$params += \SM\Http\Input::request(null, null, $this->_xssClean);
+		$obj     = new $class($params);
+		
+		if (false === is_callable([$obj, $method])) {
 			throw new RouteException('Method not found ' . $method);
 		}
 		
-		$params += \SM\Http\Input::request();
-		$data    = call_user_func([new $class($params), $method], $params);
+		$data = call_user_func([$obj, $method], $params);
 		
 		return ['params' => $params, 'data' => $data];
 	}

@@ -8,8 +8,9 @@ use SM\Db\Query\Query;
 use SM\Db\Query\Literal;
 use SM\Db\TableGateway\TableGateway;
 use SM\Cache\CacheInterface;
+use SM\Util\Str;
 
-class DbNew
+class Db
 {
 	protected $pdo;
 	protected $table;
@@ -29,7 +30,7 @@ class DbNew
 	{
 		$config  = array_merge($this->config, $config);
 		
-		$adapter = __NAMESPACE__ . '\Connection\Adapter\\' . ucfirst(strtolower($config['database_type']));
+		$adapter = __NAMESPACE__ . '\Connection\Adapter\\' . Str::nameize($config['database_type']);
 		
 		if (class_exists($adapter, true)) {
 			$this->pdo = (new $adapter)->connect($config);
@@ -322,7 +323,7 @@ class DbNew
 		if (!is_array(reset($data))) {
 			$data = [$data];
 		}
-		
+
 		$lastId = [];
 		foreach ($data as $v) {
 			$lastId[] = $gateway->insert($v, $replace);
@@ -336,11 +337,11 @@ class DbNew
 		return $this->insert($data, true);
 	}
 	
-	public function batchInsert(array $columns, array $rows)
+	public function batchInsert(array $columns, array $rows, bool $ignore = false)
 	{
 		$gateway = new TableGateway($this->table, $this->pdo);
 		
-		return $gateway->batchInsert($columns, $rows);
+		return $gateway->batchInsert($columns, $rows, $ignore);
 	}
 	
 	public function update(array $data)

@@ -11,10 +11,13 @@ class Log
 	const WARNING = 'warning';
 	
 	public static $phpErrorToLevel = [
-		E_WARNING    => self::WARNING,
-		E_NOTICE     => self::NOTICE,
-		E_STRICT     => self::WARNING,
-		E_DEPRECATED => self::WARNING
+		E_WARNING      => self::WARNING,
+		E_NOTICE       => self::NOTICE,
+		E_STRICT       => self::WARNING,
+		E_DEPRECATED   => self::WARNING,
+		E_USER_ERROR   => self::FATAL,
+		E_USER_WARNING => self::WARNING,
+		E_USER_NOTICE  => self::NOTICE,
 	];
 	
 	protected static $_log     = [];
@@ -41,13 +44,13 @@ class Log
 	
 	public static function record($msg, $level)
 	{
-		$msg = static::formatMsg($msg);
+		$logTime = date('[Y-m-d H:i:s]');
 		
 		if (is_null(static::$_traceid)) {
 			static::$_traceid = \SM\Util\Str::random();
 		}
 		
-		static::$_log[] = date('[Y-m-d H:i:s]') . ' ' . $level . ': ' . $msg . ' [' . static::$_traceid . ']';
+		static::$_log[] = $logTime . ' ' . $level . ': ' . static::formatMsg($msg) . ' [' . static::$_traceid . ']';
 	}
 	
 	public static function save($driver = 'file', $policy = [])
@@ -56,17 +59,13 @@ class Log
 			return;
 		}
 		
-		$msg = implode(PHP_EOL, static::$_log);
-		
-		static::getInstance($driver, $policy)->write($msg);
+		static::getInstance($driver, $policy)->write(implode(PHP_EOL, static::$_log));
 		static::clear();
 	}
 	
 	public static function write($msg, $driver = 'file', $policy = [])
 	{
-		$msg = static::formatMsg($msg, true);
-		
-		static::getInstance($driver, $policy)->write($msg);
+		static::getInstance($driver, $policy)->write(static::formatMsg($msg, true));
 	}
 	
 	public static function clear()

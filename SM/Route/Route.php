@@ -12,10 +12,6 @@ class Route
 	private $_extension;
 	private $_dynamicElements = [];
 	private $_mapArguments    = [];
-
-	/*
-	 * ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS']
-	 */
 	private $_requestMethod   = [];
 	
 	public function __construct($path = null)
@@ -112,7 +108,7 @@ class Route
 	{
 		$this->_requestMethod = array_map('strtoupper', Arr::toArray($methods));
 	}
-	
+
 	private function removeExtension($path)
 	{
 		if (!empty($this->_extension)) {
@@ -158,7 +154,7 @@ class Route
 				return false;
 			}
 			
-			if ($this_path_element === $match_path_elements[$i]) {
+			if (strcasecmp($this_path_element, $match_path_elements[$i]) === 0) {
 				$possible_match_string .= "/{$match_path_elements[$i]}";
 				continue;
 			}
@@ -198,7 +194,7 @@ class Route
 		
 		if ($possible_match_string === $path_to_match) {
 			if (null !== $found_dynamic_class) {
-				$this->setMapClass(($this->_classPrefix ?: '') . $found_dynamic_class);
+				$this->setMapClass($found_dynamic_class);
 			}
 			
 			if (null !== $found_dynamic_method) {
@@ -207,6 +203,10 @@ class Route
 			
 			foreach ($found_dynamic_args as $key => $found_dynamic_arg) {
 				$this->_addMapArgument($key, $found_dynamic_arg);
+			}
+
+			if ($this->_classPrefix) {
+				$this->setMapClass($this->_classPrefix . ucfirst($this->getMapClass()));
 			}
 			
 			return true;
